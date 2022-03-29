@@ -11,11 +11,17 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 plt.close("all")
 
+Model1 = 'C:/Users/Lizmot34/Desktop/RBF-PSG-0G/EM_RBF_v03_Ani/EM_RBF_v03_Ani/Salinity/salt.output.channels.txt'
+GraphName = "Predicted Soils and 0.1 Geology RBF"
+FigurePath = 'C:/Users/Lizmot34/Desktop/FinishedFigures/03092022_0G_Histogram'
+FigureSuffix = '0 Geology'
+
 ###Pull in Observed Data
 ##Site 09364500 = Outlet = Subarea 75
 OutletData = pd.read_excel('C:/Users/Lizmot34/Desktop/ObservedSaltData.xlsx', 
                      sheet_name='09364500Salts', skiprows = 1)
 OutletData.drop(OutletData.index[0:2],0, inplace=True)
+
 Outletdates = OutletData.Start_date
 Discharge=OutletData.Discharge
 ConcOutSO4 = OutletData.SO4
@@ -43,6 +49,9 @@ LoadOutMg.index = Outletdates
 LoadOutNa.index = Outletdates
 LoadOutK.index = Outletdates
 LoadOutCl.index = Outletdates
+#Take out 0 values for CO3 for Residual Calculations
+ConcOutCO3PRes = ConcOutCO3.replace(0, np.nan)
+LoadOutCO3PRes = LoadOutCO3.replace(0, np.nan)
 
 ##Site 09361500 = Site 41
 ObservedData41 = pd.read_excel('C:/Users/Lizmot34/Desktop/ObservedSaltData.xlsx',
@@ -124,7 +133,7 @@ LoadOb9K.index = Observeddates9
 
 
 ####Pull in Model Data#################################################################################################################
-Mod1 = pd.read_csv('salt.txt',skiprows = 4, delim_whitespace = True)
+Mod1 = pd.read_csv(Model1, skiprows = 4, delim_whitespace = True)
 #Drop Data till the End of Warmup
 Mod1.drop(Mod1.index[0:136950],0,inplace=True)
 datestart = np.array('1992-01-01', dtype=np.datetime64)
@@ -616,7 +625,7 @@ HCO3_ObservedDays_75 = HCO3Dates_92_75.union_many([HCO3Dates_93_75, HCO3Dates_94
                                               HCO3Dates_02_75, HCO3Dates_03_75, HCO3Dates_04_75, 
                                               HCO3Dates_05_75, HCO3Dates_06_75, HCO3Dates_07_75, 
                                               HCO3Dates_08_75, HCO3Dates_09_75, HCO3Dates_10_75])
-###
+###Set Index
 SO4_Modeled_75.index = ObservedDays_75
 Ca_Modeled_75.index = ObservedDays_75
 Mg_Modeled_75.index = ObservedDays_75
@@ -627,15 +636,25 @@ CO3_Modeled_75.index = CO3_ObservedDays_75
 HCO3_Modeled_75.index = HCO3_ObservedDays_75
 ###Analysis of Observed and Model data
 SO4_Residual_75 = SO4_Modeled_75 - LoadOutSO4
+SO4_PercRes_75 = SO4_Residual_75 / LoadOutSO4
 Ca_Residual_75 = Ca_Modeled_75 - LoadOutCa
+Ca_PercRes_75 = Ca_Residual_75 / LoadOutCa
 Mg_Residual_75 = Mg_Modeled_75 - LoadOutMg
+Mg_PercRes_75 = Mg_Residual_75 / LoadOutMg
 Na_Residual_75 = Na_Modeled_75 - LoadOutNa
+Na_PercRes_75 = Na_Residual_75 / LoadOutNa
 K_Residual_75 = K_Modeled_75 - LoadOutK
+K_PercRes_75 = K_Residual_75 / LoadOutK
 Cl_Residual_75 = Cl_Modeled_75 - LoadOutCl
+Cl_PercRes_75 = Cl_Residual_75 / LoadOutCl
 CO3_Residual_75 = CO3_Modeled_75 - LoadOutCO3
+CO3_PercRes_75 = CO3_Residual_75 / LoadOutCO3PRes  ###Zeros present in observed loading so use of null value replacement
 HCO3_Residual_75 = HCO3_Modeled_75 - LoadOutHCO3
+HCO3_PercRes_75 = HCO3_Residual_75 / LoadOutHCO3
 
-
+pd.set_option('display.max_rows', None)
+#print(SO4_PercRes_75)
+#
 ###Subarea 41################################################################################################
 ##Continuous
 Sub41 = Mod1[Mod1.subarea == 41]
@@ -689,21 +708,27 @@ Mg_Modeled_41 = pd.concat([Mg_02_41, Mg_10_41, Mg_11_41], axis=0)
 Na_Modeled_41 = pd.concat([Na_02_41, Na_10_41, Na_11_41], axis=0)
 K_Modeled_41 = pd.concat([K_02_41, K_10_41, K_11_41], axis=0)
 Cl_Modeled_41 = pd.concat([Cl_02_41, Cl_10_41, Cl_11_41], axis=0)
-
+#Set Index
 SO4_Modeled_41.index = ObservedDays_41
 Ca_Modeled_41.index = ObservedDays_41
 Mg_Modeled_41.index = ObservedDays_41
 Na_Modeled_41.index = ObservedDays_41
 K_Modeled_41.index = ObservedDays_41
 Cl_Modeled_41.index = ObservedDays_41
-
-###Analysis of Observed and Model data
+#Analysis of Observed and Model data
 SO4_Residual_41 = SO4_Modeled_41 - LoadOb41SO4
+SO4_PercRes_41 = SO4_Residual_41 / LoadOb41SO4
 Ca_Residual_41 = Ca_Modeled_41 - LoadOb41Ca
+Ca_PercRes_41 = Ca_Residual_41 / LoadOb41Ca
 Mg_Residual_41 = Mg_Modeled_41 - LoadOb41Mg
+Mg_PercRes_41 = Mg_Residual_41 / LoadOb41Mg
 Na_Residual_41 = Na_Modeled_41 - LoadOb41Na
+Na_PercRes_41 = Na_Residual_41 / LoadOb41Na
 K_Residual_41 = K_Modeled_41 - LoadOb41K
+K_PercRes_41 = K_Residual_41 / LoadOb41K
 Cl_Residual_41 = Cl_Modeled_41 - LoadOb41Cl
+Cl_PercRes_41 = Cl_Residual_41 / LoadOb41Cl
+
 
 #####Subarea 12#######################################################################################
 ###Continuous
@@ -1297,14 +1322,21 @@ Cl_Modeled_12.index = Cl_ObservedDays_12
 HCO3_Modeled_12.index = HCO3_ObservedDays_12
 
 
-####Analyze
+#Analysis of Observed and Model data
 SO4_Residual_12 = SO4_Modeled_12 - LoadOb12SO4
+SO4_PercRes_12 = SO4_Residual_12 / LoadOb12SO4
 Ca_Residual_12 = Ca_Modeled_12 - LoadOb12Ca
+Ca_PercRes_12 = Ca_Residual_12 / LoadOb12Ca
 Mg_Residual_12 = Mg_Modeled_12 - LoadOb12Mg
+Mg_PercRes_12 = Mg_Residual_12 / LoadOb12Mg
 Na_Residual_12 = Na_Modeled_12 - LoadOb12Na
+Na_PercRes_12 = Na_Residual_12 / LoadOb12Na
 K_Residual_12 = K_Modeled_12 - LoadOb12K
+K_PercRes_12 = K_Residual_12 / LoadOb12K
 Cl_Residual_12 = Cl_Modeled_12 - LoadOb12Cl
+Cl_PercRes_12 = Cl_Residual_12 / LoadOb12Cl
 HCO3_Residual_12 = HCO3_Modeled_12 - LoadOb12HCO3
+HCO3_PercRes_12 = HCO3_Residual_12 / LoadOb12HCO3
 
 ###Subarea 9######################################################################################################################################
 ##Continuous
@@ -1489,34 +1521,52 @@ Ca_Modeled_9.index = ObservedDays_9
 Mg_Modeled_9.index = ObservedDays_9
 Na_Modeled_9.index = ObservedDays_9
 K_Modeled_9.index = K_ObservedDays_9
-
-
-####Analyze
+#Analysis of Observed and Model data
 SO4_Residual_9 = SO4_Modeled_9 - LoadOb9SO4
+SO4_PercRes_9 = SO4_Residual_9 / LoadOb9SO4
 Ca_Residual_9 = Ca_Modeled_9 - LoadOb9Ca
+Ca_PercRes_9 = Ca_Residual_9 / LoadOb9Ca
 Mg_Residual_9 = Mg_Modeled_9 - LoadOb9Mg
+Mg_PercRes_9 = Mg_Residual_9 / LoadOb9Mg
 Na_Residual_9 = Na_Modeled_9 - LoadOb9Na
+Na_PercRes_9 = Na_Residual_9 / LoadOb9Na
 K_Residual_9 = K_Modeled_9 - LoadOb9K
+K_PercRes_9 = K_Residual_9 / LoadOb9K
 
 
-####Plots##############################################################################################################################
+#####Plots##############################################################################################################################
 ##Subarea 75########################################################################################
-##SO4
-#fig, ax = plt.subplots(figsize=(5, 2.7), constrained_layout=True)
-#ax.scatter(ObservedDays_75, SO4_Modeled_75, color='blue', label='75 Model')
+#SO4###################################################################################
+#fig, ax = plt.subplots(figsize=(10, 5), constrained_layout=True)
+#ax.plot(ObservedDays_75, SO4_Modeled_75, color='blue', label='75 Model')
 #ax.scatter(Outletdates, LoadOutSO4, color='red', label='75 Gage')
 #ax.set_xlabel('Time')
 #ax.set_ylabel('Loading [kg/d]')
 #ax.set_title("SO4 Observed Loading")
 #ax.legend()
-fig, ax = plt.subplots(figsize=(7,4), constrained_layout=True)
-ax.scatter(SO4_Residual_75.index, SO4_Residual_75)
-ax.set_xlabel('Time')
-ax.set_ylabel('Residual')
-ax.set_title('SO4 at 75 Residual between Modeled and Observed')
-fig.savefig('C:/Users/Lizmot34/Desktop/FinishedFigures/SO4_75_Residual.png')
 
-##Ca
+#fig, ax = plt.subplots(figsize=(7,4), constrained_layout=True)
+#ax.scatter(SO4_Residual_75.index, SO4_Residual_75)
+#ax.set_xlabel('Time')
+#ax.set_ylabel('Residual')
+#ax.set_title('SO4 at 75 Residual')
+#fig.savefig('{}/SO4Res75_{}.png'.format(FigurePath, FigureSuffix))
+
+#fig, ax = plt.subplots(figsize=(7,4), constrained_layout=True)
+#ax.scatter(SO4_PercRes_75.index, SO4_PercRes_75)
+#ax.set_ylim([-1,1])
+#ax.set_xlabel('Time')
+#ax.set_ylabel('Residual')
+#ax.set_title('SO4 at 75 Percent Difference Residual')
+#fig.savefig('{}/SO4PercDiffRes75_{}.png'.format(FigurePath, FigureSuffix))
+
+fig = plt.figure(figsize=(7,4),constrained_layout=True)
+ax = fig.gca()
+SO4_PercRes_75.hist(ax=ax, range=(-1,1), edgecolor='black',bins=[-1,-0.75,-0.5,-0.25,0,0.25,0.5,0.75,1])
+ax.set_title("SO4 at 75 Percent Difference Residual Histogram")
+fig.savefig('{}/SO4PercDiffRes75_Hist_{}.png'.format(FigurePath, FigureSuffix))
+
+##Ca##############################################################################
 #fig, ax = plt.subplots(figsize=(5, 2.7), constrained_layout=True)
 #ax.scatter(ObservedDays_75, Ca_Modeled_75, color='blue', label='Model')
 #ax.scatter(Outletdates, LoadOutCa, color='red', label='Gage')
@@ -1524,13 +1574,29 @@ fig.savefig('C:/Users/Lizmot34/Desktop/FinishedFigures/SO4_75_Residual.png')
 #ax.set_ylabel('Loading [kg/d]')
 #ax.set_title("Ca Observed Loading")
 #ax.legend()
-fig, ax = plt.subplots(figsize=(7,4), constrained_layout=True)
-ax.scatter(Ca_Residual_75.index, Ca_Residual_75)
-ax.set_xlabel('Time')
-ax.set_ylabel('Residual')
-ax.set_title('Ca at 75 Residual between Modeled and Observed')
-fig.savefig('C:/Users/Lizmot34/Desktop/FinishedFigures/Ca_75_Residual.png')
-##Mg
+
+#fig, ax = plt.subplots(figsize=(7,4), constrained_layout=True)
+#ax.scatter(Ca_Residual_75.index, Ca_Residual_75)
+#ax.set_xlabel('Time')
+#ax.set_ylabel('Residual')
+#ax.set_title('Ca at 75 Residual')
+#fig.savefig('{}/CaRes75_{}.png'.format(FigurePath, FigureSuffix))
+
+#fig, ax = plt.subplots(figsize=(7,4), constrained_layout=True)
+#ax.scatter(Ca_PercRes_75.index, Ca_PercRes_75)
+#ax.set_ylim([-1,1])
+#ax.set_xlabel('Time')
+#ax.set_ylabel('Residual')
+#ax.set_title('Ca at 75 Percent Difference Residual')
+#fig.savefig('{}/CaPercDiffRes75_{}.png'.format(FigurePath, FigureSuffix))
+
+fig = plt.figure(figsize=(7,4),constrained_layout=True)
+ax = fig.gca()
+Ca_PercRes_75.hist(ax=ax, range=(-1,1), edgecolor='black',bins=[-1,-0.75,-0.5,-0.25,0,0.25,0.5,0.75,1])
+ax.set_title("Ca at 75 Percent Difference Residual Histogram")
+fig.savefig('{}/CaPercDiffRes75_Hist_{}.png'.format(FigurePath, FigureSuffix))
+
+##Mg###############################################################################
 #fig, ax = plt.subplots(figsize=(5, 2.7), constrained_layout=True)
 #ax.scatter(ObservedDays_75, Mg_Modeled_75, color='blue', label='Model')
 #ax.scatter(Outletdates, LoadOutMg, color='red', label='Gage')
@@ -1538,12 +1604,29 @@ fig.savefig('C:/Users/Lizmot34/Desktop/FinishedFigures/Ca_75_Residual.png')
 #ax.set_ylabel('Loading [kg/d]')
 #ax.set_title("Mg Observed Loading")
 #ax.legend()
-fig, ax = plt.subplots(figsize=(7,4), constrained_layout=True)
-ax.scatter(Mg_Residual_75.index, Mg_Residual_75)
-ax.set_xlabel('Time')
-ax.set_ylabel('Residual')
-ax.set_title('Mg at 75 Residual between Modeled and Observed')
-##Na
+
+#fig, ax = plt.subplots(figsize=(7,4), constrained_layout=True)
+#ax.scatter(Mg_Residual_75.index, Mg_Residual_75)
+#ax.set_xlabel('Time')
+#ax.set_ylabel('Residual')
+#ax.set_title('Mg at 75 Residual')
+#fig.savefig('{}/MgRes75_{}.png'.format(FigurePath, FigureSuffix))
+
+#fig, ax = plt.subplots(figsize=(7,4), constrained_layout=True)
+#ax.scatter(Mg_PercRes_75.index, Mg_PercRes_75)
+#ax.set_ylim([-1,1])
+#ax.set_xlabel('Time')
+#ax.set_ylabel('Residual')
+#ax.set_title('Mg at 75 Percent Difference Residual')
+#fig.savefig('{}/MgPercDiffRes75_{}.png'.format(FigurePath, FigureSuffix))
+
+fig = plt.figure(figsize=(7,4),constrained_layout=True)
+ax = fig.gca()
+Mg_PercRes_75.hist(ax=ax, range=(-1,1), edgecolor='black',bins=[-1,-0.75,-0.5,-0.25,0,0.25,0.5,0.75,1])
+ax.set_title("Mg at 75 Percent Difference Residual Histogram")
+fig.savefig('{}/MgPercDiffRes75_Hist_{}.png'.format(FigurePath, FigureSuffix))
+
+##Na############################################################################
 #fig, ax = plt.subplots(figsize=(5, 2.7), constrained_layout=True)
 #ax.scatter(ObservedDays_75, Na_Modeled_75, color='blue', label='Model')
 #ax.scatter(Outletdates, LoadOutNa, color='red', label='Gage')
@@ -1551,12 +1634,29 @@ ax.set_title('Mg at 75 Residual between Modeled and Observed')
 #ax.set_ylabel('Loading [kg/d]')
 #ax.set_title("Na Observed Loading")
 #ax.legend()
-fig, ax = plt.subplots(figsize=(7,4), constrained_layout=True)
-ax.scatter(Na_Residual_75.index, Na_Residual_75)
-ax.set_xlabel('Time')
-ax.set_ylabel('Residual')
-ax.set_title('Na at 75 Residual between Modeled and Observed')
-##K
+
+#fig, ax = plt.subplots(figsize=(7,4), constrained_layout=True)
+#ax.scatter(Na_Residual_75.index, Na_Residual_75)
+#ax.set_xlabel('Time')
+#ax.set_ylabel('Residual')
+#ax.set_title('Na at 75 Residual')
+#fig.savefig('{}/NaRes75_{}.png'.format(FigurePath,FigureSuffix))
+
+#fig, ax = plt.subplots(figsize=(7,4), constrained_layout=True)
+#ax.scatter(Na_PercRes_75.index, Na_PercRes_75)
+#ax.set_ylim([-1,1])
+#ax.set_xlabel('Time')
+#ax.set_ylabel('Residual')
+#ax.set_title('Na at 75 Percent Difference Residual')
+#fig.savefig('{}/NaPercDiffRes75_{}.png'.format(FigurePath, FigureSuffix))
+
+fig = plt.figure(figsize=(7,4),constrained_layout=True)
+ax = fig.gca()
+Na_PercRes_75.hist(ax=ax, range=(-1,1), edgecolor='black',bins=[-1,-0.75,-0.5,-0.25,0,0.25,0.5,0.75,1])
+ax.set_title("Na at 75 Percent Difference Residual Histogram")
+fig.savefig('{}/NaPercDiffRes75_Hist_{}.png'.format(FigurePath, FigureSuffix))
+
+##K##############################################################################
 #fig, ax = plt.subplots(figsize=(5, 2.7), constrained_layout=True)
 #ax.scatter(ObservedDays_75, K_Modeled_75, color='blue', label='Model')
 #ax.scatter(Outletdates, LoadOutK, color='red', label='gage')
@@ -1564,12 +1664,29 @@ ax.set_title('Na at 75 Residual between Modeled and Observed')
 #ax.set_ylabel('Loading [kg/d]')
 #ax.set_title("K Observed Loading")
 #ax.legend()
-fig, ax = plt.subplots(figsize=(7,4), constrained_layout=True)
-ax.scatter(K_Residual_75.index, K_Residual_75)
-ax.set_xlabel('Time')
-ax.set_ylabel('Residual')
-ax.set_title('K at 75 Residual between Modeled and Observed')
-##Cl
+
+#fig, ax = plt.subplots(figsize=(7,4), constrained_layout=True)
+#ax.scatter(K_Residual_75.index, K_Residual_75)
+#ax.set_xlabel('Time')
+#ax.set_ylabel('Residual')
+#ax.set_title('K at 75 Residual')
+#fig.savefig('{}/KRes75_{}.png'.format(FigurePath,FigureSuffix))
+
+#fig, ax = plt.subplots(figsize=(7,4), constrained_layout=True)
+#ax.scatter(K_PercRes_75.index, K_PercRes_75)
+#ax.set_ylim([-1,1])
+#ax.set_xlabel('Time')
+#ax.set_ylabel('Residual')
+#ax.set_title('K at 75 Percent Difference Residual')
+#fig.savefig('{}/KPercDiffRes75_{}.png'.format(FigurePath, FigureSuffix))
+
+fig = plt.figure(figsize=(7,4),constrained_layout=True)
+ax = fig.gca()
+K_PercRes_75.hist(ax=ax, range=(-1,1), edgecolor='black',bins=[-1,-0.75,-0.5,-0.25,0,0.25,0.5,0.75,1])
+ax.set_title("K at 75 Percent Difference Residual Histogram")
+fig.savefig('{}/KPercDiffRes75_Hist_{}.png'.format(FigurePath, FigureSuffix))
+
+##Cl############################################################################
 #fig, ax = plt.subplots(figsize=(5, 2.7), constrained_layout=True)
 #ax.scatter(ObservedDays_75, Cl_Modeled_75, color='blue', label='Model')
 #ax.scatter(Outletdates, LoadOutCl, color='red', label='Gage')
@@ -1577,12 +1694,29 @@ ax.set_title('K at 75 Residual between Modeled and Observed')
 #ax.set_ylabel('Loading [kg/d]')
 #ax.set_title("Cl Observed Loading")
 #ax.legend()
-fig, ax = plt.subplots(figsize=(7,4), constrained_layout=True)
-ax.scatter(Cl_Residual_75.index, Cl_Residual_75)
-ax.set_xlabel('Time')
-ax.set_ylabel('Residual')
-ax.set_title('Cl at 75 Residual between Modeled and Observed')
-##CO3
+
+#fig, ax = plt.subplots(figsize=(7,4), constrained_layout=True)
+#ax.scatter(Cl_Residual_75.index, Cl_Residual_75)
+#ax.set_xlabel('Time')
+#ax.set_ylabel('Residual')
+#ax.set_title('Cl at 75 Residual')
+#fig.savefig('{}/ClRes75_{}.png'.format(FigurePath,FigureSuffix))
+
+#fig, ax = plt.subplots(figsize=(7,4), constrained_layout=True)
+#ax.scatter(Cl_PercRes_75.index, Cl_PercRes_75)
+#ax.set_ylim([-1,2])
+#ax.set_xlabel('Time')
+#ax.set_ylabel('Residual')
+#ax.set_title('Cl at 75 Percent Difference Residual')
+#fig.savefig('{}/ClPercDiffRes75_{}.png'.format(FigurePath, FigureSuffix))
+
+fig = plt.figure(figsize=(7,4),constrained_layout=True)
+ax = fig.gca()
+Cl_PercRes_75.hist(ax=ax, range=(-1,1), edgecolor='black',bins=[-1,-0.75,-0.5,-0.25,0,0.25,0.5,0.75,1])
+ax.set_title("Cl at 75 Percent Difference Residual Histogram")
+fig.savefig('{}/ClPercDiffRes75_Hist_{}.png'.format(FigurePath, FigureSuffix))
+
+##CO3###########################################################################
 #fig, ax = plt.subplots(figsize=(5, 2.7), constrained_layout=True)
 #ax.scatter(CO3_ObservedDays_75, CO3_Modeled_75, color='blue', label='Model')
 #ax.scatter(Outletdates, LoadOutCO3, color='red', label='Gage')
@@ -1590,13 +1724,29 @@ ax.set_title('Cl at 75 Residual between Modeled and Observed')
 #ax.set_ylabel('Loading [kg/d]')
 #ax.set_title("CO3 Observed Loading")
 #ax.legend()
-fig, ax = plt.subplots(figsize=(7,4), constrained_layout=True)
-ax.scatter(CO3_Residual_75.index, CO3_Residual_75)
-ax.set_xlabel('Time')
-ax.set_ylabel('Residual')
-ax.set_title('Co3 at 75 Residual between Modeled and Observed')
-fig.savefig('C:/Users/Lizmot34/Desktop/FinishedFigures/CO3_75_Residual.png')
-##HCO3
+
+#fig, ax = plt.subplots(figsize=(7,4), constrained_layout=True)
+#ax.scatter(CO3_Residual_75.index, CO3_Residual_75)
+#ax.set_xlabel('Time')
+#ax.set_ylabel('Residual')
+#ax.set_title('CO3 at 75 Residual')
+#fig.savefig('{}/CO3Res75_{}.png'.format(FigurePath,FigureSuffix))
+
+#fig, ax = plt.subplots(figsize=(7,4), constrained_layout=True)
+#ax.scatter(CO3_PercRes_75.index, CO3_PercRes_75)
+#ax.set_ylim([-2,1])
+#ax.set_xlabel('Time')
+#ax.set_ylabel('Residual')
+#ax.set_title('CO3 at 75 Percent Difference Residual')
+#fig.savefig('{}/CO3PercDiffRes75_{}.png'.format(FigurePath, FigureSuffix))
+
+fig = plt.figure(figsize=(7,4),constrained_layout=True)
+ax = fig.gca()
+CO3_PercRes_75.hist(ax=ax, range=(-1,1), edgecolor='black',bins=[-1,-0.75,-0.5,-0.25,0,0.25,0.5,0.75,1])
+ax.set_title("CO3 at 75 Percent Difference Residual Histogram")
+fig.savefig('{}/CO3PercDiffRes75_Hist_{}.png'.format(FigurePath, FigureSuffix))
+
+##HCO3##########################################################################
 #fig, ax = plt.subplots(figsize=(5, 2.7), constrained_layout=True)
 #ax.scatter(HCO3_ObservedDays_75, HCO3_Modeled_75, color='blue', label='Model')
 #ax.scatter(Outletdates, LoadOutHCO3, color='red', label='Model')
@@ -1604,14 +1754,30 @@ fig.savefig('C:/Users/Lizmot34/Desktop/FinishedFigures/CO3_75_Residual.png')
 #ax.set_ylabel('Loading [kg/d]')
 #ax.set_title("HCO3 75 Observed Loading")
 #ax.legend()
-fig, ax = plt.subplots(figsize=(7,4), constrained_layout=True)
-ax.scatter(HCO3_Residual_75.index, HCO3_Residual_75)
-ax.set_xlabel('Time')
-ax.set_ylabel('Residual')
-ax.set_title('HCO3 at 75 Residual between Modeled and Observed')
+
+#fig, ax = plt.subplots(figsize=(7,4), constrained_layout=True)
+#ax.scatter(HCO3_Residual_75.index, HCO3_Residual_75)
+#ax.set_xlabel('Time')
+#ax.set_ylabel('Residual')
+#ax.set_title('HCO3 at 75 Residual')
+#fig.savefig('{}/HCO3Res75_{}.png'.format(FigurePath,FigureSuffix))
+
+#fig, ax = plt.subplots(figsize=(7,4), constrained_layout=True)
+#ax.scatter(HCO3_PercRes_75.index, HCO3_PercRes_75)
+#ax.set_ylim([-1,1])
+#ax.set_xlabel('Time')
+#ax.set_ylabel('Residual')
+#ax.set_title('HCO3 at 75 Percent Difference Residual')
+#fig.savefig('{}/HCO3PercDiffRes75_{}.png'.format(FigurePath, FigureSuffix))
+
+fig = plt.figure(figsize=(7,4),constrained_layout=True)
+ax = fig.gca()
+HCO3_PercRes_75.hist(ax=ax, range=(-1,1), edgecolor='black',bins=[-1,-0.75,-0.5,-0.25,0,0.25,0.5,0.75,1])
+ax.set_title("HCO3 at 75 Percent Difference Residual Histogram")
+fig.savefig('{}/HCO3PercDiffRes75_Hist_{}.png'.format(FigurePath, FigureSuffix))
 
 ###Subarea 41######################################################################################################################
-##SO4
+##SO4###########################################################################
 #fig, ax = plt.subplots(figsize=(5, 2.7), constrained_layout=True)
 #ax.scatter(ObservedDays_41, SO4_Modeled_41, color='blue', label='Model')
 #ax.scatter(Observeddates41, LoadOb41SO4, color='red', label='Gage')
@@ -1619,14 +1785,28 @@ ax.set_title('HCO3 at 75 Residual between Modeled and Observed')
 #ax.set_ylabel('Loading [kg/d]')
 #ax.set_title("SO4 at 41 Observed Loading")
 #ax.legend()
-fig, ax = plt.subplots(figsize=(7,4), constrained_layout=True)
-ax.scatter(SO4_Residual_41.index, SO4_Residual_41)
-ax.set_xlabel('Time')
-ax.set_ylabel('Residual')
-ax.set_title('SO4 at 41 Residual between Modeled and Observed')
-fig.savefig('C:/Users/Lizmot34/Desktop/FinishedFigures/SO4_41_Residual.png')
 
-##Ca
+#fig, ax = plt.subplots(figsize=(7,4), constrained_layout=True)
+#ax.scatter(SO4_Residual_41.index, SO4_Residual_41)
+#ax.set_xlabel('Time')
+#ax.set_ylabel('Residual')
+#ax.set_title('SO4 at 41 Residual')
+#fig.savefig('{}/SO4Res41_{}.png'.format(FigurePath, FigureSuffix))
+
+#fig, ax = plt.subplots(figsize=(7,4), constrained_layout=True)
+#ax.scatter(SO4_PercRes_41.index, SO4_PercRes_41)
+#ax.set_xlabel('Time')
+#ax.set_ylabel('Residual')
+#ax.set_title('SO4 at 41 Percent Difference Residual')
+#fig.savefig('{}/SO4PercDiffRes41_{}.png'.format(FigurePath, FigureSuffix))
+
+fig = plt.figure(figsize=(7,4),constrained_layout=True)
+ax = fig.gca()
+SO4_PercRes_41.hist(ax=ax, range=(-1,1), edgecolor='black',bins=[-1,-0.75,-0.5,-0.25,0,0.25,0.5,0.75,1])
+ax.set_title("SO4 at 41 Percent Difference Residual Histogram")
+fig.savefig('{}/SO4PercDiffRes41_Hist_{}.png'.format(FigurePath, FigureSuffix))
+
+##Ca############################################################################
 #fig, ax = plt.subplots(figsize=(5, 2.7), constrained_layout=True)
 #ax.scatter(ObservedDays_41, Ca_Modeled_41, color='blue', label='Model')
 #ax.scatter(Observeddates41, LoadOb41Ca, color='red', label='Gage')
@@ -1634,13 +1814,28 @@ fig.savefig('C:/Users/Lizmot34/Desktop/FinishedFigures/SO4_41_Residual.png')
 #ax.set_ylabel('Loading [kg/d]')
 #ax.set_title("Ca 41 Observed Loading")
 #ax.legend()
-fig, ax = plt.subplots(figsize=(7,4), constrained_layout=True)
-ax.scatter(Ca_Residual_41.index, Ca_Residual_41)
-ax.set_xlabel('Time')
-ax.set_ylabel('Residual')
-ax.set_title('Ca at 41 Residual between Modeled and Observed')
-fig.savefig('C:/Users/Lizmot34/Desktop/FinishedFigures/Ca_41_Residual.png')
-##Mg
+
+#fig, ax = plt.subplots(figsize=(7,4), constrained_layout=True)
+#ax.scatter(Ca_Residual_41.index, Ca_Residual_41)
+#ax.set_xlabel('Time')
+#ax.set_ylabel('Residual')
+#ax.set_title('Ca at 41 Residual')
+#fig.savefig('{}/CaRes41_{}.png'.format(FigurePath, FigureSuffix))
+
+#fig, ax = plt.subplots(figsize=(7,4), constrained_layout=True)
+#ax.scatter(Ca_PercRes_41.index, Ca_PercRes_41)
+#ax.set_xlabel('Time')
+#ax.set_ylabel('Residual')
+#ax.set_title('Ca at 41 Percent Difference Residual')
+#fig.savefig('{}/CaPercDiffRes41_{}.png'.format(FigurePath, FigureSuffix))
+
+fig = plt.figure(figsize=(7,4),constrained_layout=True)
+ax = fig.gca()
+Ca_PercRes_41.hist(ax=ax, range=(-1,1), edgecolor='black',bins=[-1,-0.75,-0.5,-0.25,0,0.25,0.5,0.75,1])
+ax.set_title("Ca at 41 Percent Difference Residual Histogram")
+fig.savefig('{}/CaPercDiffRes41_Hist_{}.png'.format(FigurePath, FigureSuffix))
+
+##Mg############################################################################
 #fig, ax = plt.subplots(figsize=(5, 2.7), constrained_layout=True)
 #ax.scatter(ObservedDays_41, Mg_Modeled_41, color='blue', label='Model')
 #ax.scatter(Observeddates41, LoadOb41Mg, color='red', label='Gage')
@@ -1648,12 +1843,28 @@ fig.savefig('C:/Users/Lizmot34/Desktop/FinishedFigures/Ca_41_Residual.png')
 #ax.set_ylabel('Loading [kg/d]')
 #ax.set_title("Mg 41 Observed Loading")
 #ax.legend()
-fig, ax = plt.subplots(figsize=(7,4), constrained_layout=True)
-ax.scatter(Mg_Residual_41.index, Mg_Residual_41)
-ax.set_xlabel('Time')
-ax.set_ylabel('Residual')
-ax.set_title('Mg at 41 Residual between Modeled and Observed')
-##Na
+
+#fig, ax = plt.subplots(figsize=(7,4), constrained_layout=True)
+#ax.scatter(Mg_Residual_41.index, Mg_Residual_41)
+#ax.set_xlabel('Time')
+#ax.set_ylabel('Residual')
+#ax.set_title('Mg at 41 Residual')
+#fig.savefig('{}/MgRes41_{}.png'.format(FigurePath, FigureSuffix))
+
+#fig, ax = plt.subplots(figsize=(7,4), constrained_layout=True)
+#ax.scatter(Mg_PercRes_41.index, Mg_PercRes_41)
+#ax.set_xlabel('Time')
+#ax.set_ylabel('Residual')
+#ax.set_title('Mg at 41 Percent Difference Residual')
+#fig.savefig('{}/MgPercDiffRes41_{}.png'.format(FigurePath, FigureSuffix))
+
+fig = plt.figure(figsize=(7,4),constrained_layout=True)
+ax = fig.gca()
+Mg_PercRes_41.hist(ax=ax, range=(-1,1), edgecolor='black',bins=[-1,-0.75,-0.5,-0.25,0,0.25,0.5,0.75,1])
+ax.set_title("Mg at 41 Percent Difference Residual Histogram")
+fig.savefig('{}/MgPercDiffRes41_Hist_{}.png'.format(FigurePath, FigureSuffix))
+
+##Na############################################################################
 #fig, ax = plt.subplots(figsize=(5, 2.7), constrained_layout=True)
 #ax.scatter(ObservedDays_41, Na_Modeled_41, color='blue', label='Model')
 #ax.scatter(Observeddates41, LoadOb41Na, color='red', label='Gage')
@@ -1661,12 +1872,28 @@ ax.set_title('Mg at 41 Residual between Modeled and Observed')
 #ax.set_ylabel('Loading [kg/d]')
 #ax.set_title("Na 41 Observed Loading")
 #ax.legend()
-fig, ax = plt.subplots(figsize=(7,4), constrained_layout=True)
-ax.scatter(Na_Residual_41.index, Na_Residual_41)
-ax.set_xlabel('Time')
-ax.set_ylabel('Residual')
-ax.set_title('Na at 41 Residual between Modeled and Observed')
-##K
+
+#fig, ax = plt.subplots(figsize=(7,4), constrained_layout=True)
+#ax.scatter(Na_Residual_41.index, Na_Residual_41)
+#ax.set_xlabel('Time')
+#ax.set_ylabel('Residual')
+#ax.set_title('Na at 41 Residual')
+#fig.savefig('{}/NaRes41_{}.png'.format(FigurePath, FigureSuffix))
+
+#fig, ax = plt.subplots(figsize=(7,4), constrained_layout=True)
+#ax.scatter(Na_PercRes_41.index, Na_PercRes_41)
+#ax.set_xlabel('Time')
+#ax.set_ylabel('Residual')
+#ax.set_title('Na at 41 Percent Difference Residual')
+#fig.savefig('{}/NaPercDiffRes41_{}.png'.format(FigurePath, FigureSuffix))
+
+fig = plt.figure(figsize=(7,4),constrained_layout=True)
+ax = fig.gca()
+Na_PercRes_41.hist(ax=ax, range=(-1,1), edgecolor='black',bins=[-1,-0.75,-0.5,-0.25,0,0.25,0.5,0.75,1])
+ax.set_title("Na at 41 Percent Difference Residual Histogram")
+fig.savefig('{}/NaPercDiffRes41_Hist_{}.png'.format(FigurePath, FigureSuffix))
+
+##K#############################################################################
 #fig, ax = plt.subplots(figsize=(5, 2.7), constrained_layout=True)
 #ax.scatter(ObservedDays_41, K_Modeled_41, color='blue', label='Model')
 #ax.scatter(Observeddates41, LoadOb41K, color='red', label='Gage')
@@ -1674,12 +1901,28 @@ ax.set_title('Na at 41 Residual between Modeled and Observed')
 #ax.set_ylabel('Loading [kg/d]')
 #ax.set_title("K 41 Observed Loading")
 #ax.legend()
-fig, ax = plt.subplots(figsize=(7,4), constrained_layout=True)
-ax.scatter(K_Residual_41.index, K_Residual_41)
-ax.set_xlabel('Time')
-ax.set_ylabel('Residual')
-ax.set_title('K at 41 Residual between Modeled and Observed')
-##Cl
+
+#fig, ax = plt.subplots(figsize=(7,4), constrained_layout=True)
+#ax.scatter(K_Residual_41.index, K_Residual_41)
+#ax.set_xlabel('Time')
+#ax.set_ylabel('Residual')
+#ax.set_title('K at 41 Residual')
+#fig.savefig('{}/KRes41_{}.png'.format(FigurePath, FigureSuffix))
+
+#fig, ax = plt.subplots(figsize=(7,4), constrained_layout=True)
+#ax.scatter(K_PercRes_41.index, K_PercRes_41)
+#ax.set_xlabel('Time')
+#ax.set_ylabel('Residual')
+#ax.set_title('K at 41 Percent Difference Residual')
+#fig.savefig('{}/KPercDiffRes41_{}.png'.format(FigurePath, FigureSuffix))
+
+fig = plt.figure(figsize=(7,4),constrained_layout=True)
+ax = fig.gca()
+K_PercRes_41.hist(ax=ax, range=(-1,1), edgecolor='black',bins=[-1,-0.75,-0.5,-0.25,0,0.25,0.5,0.75,1])
+ax.set_title("K at 41 Percent Difference Residual Histogram")
+fig.savefig('{}/KPercDiffRes41_Hist_{}.png'.format(FigurePath, FigureSuffix))
+
+##Cl############################################################################
 #fig, ax = plt.subplots(figsize=(5, 2.7), constrained_layout=True)
 #ax.scatter(ObservedDays_41, Cl_Modeled_41, color='blue', label='Model')
 #ax.scatter(Observeddates41, LoadOb41Cl, color='red', label='Gage')
@@ -1687,14 +1930,29 @@ ax.set_title('K at 41 Residual between Modeled and Observed')
 #ax.set_ylabel('Loading [kg/d]')
 #ax.set_title("Cl 41 Observed Loading")
 #ax.legend()
-fig, ax = plt.subplots(figsize=(7,4), constrained_layout=True)
-ax.scatter(Cl_Residual_41.index, Cl_Residual_41)
-ax.set_xlabel('Time')
-ax.set_ylabel('Residual')
-ax.set_title('Cl at 41 Residual between Modeled and Observed')
 
-###Subarea 12################################################################################################################################
-##SO4
+#fig, ax = plt.subplots(figsize=(7,4), constrained_layout=True)
+#ax.scatter(Cl_Residual_41.index, Cl_Residual_41)
+#ax.set_xlabel('Time')
+#ax.set_ylabel('Residual')
+#ax.set_title('Cl at 41 Residual')
+#fig.savefig('{}/ClRes41_{}.png'.format(FigurePath, FigureSuffix))
+
+#fig, ax = plt.subplots(figsize=(7,4), constrained_layout=True)
+#ax.scatter(Cl_PercRes_41.index, Cl_PercRes_41)
+#ax.set_xlabel('Time')
+#ax.set_ylabel('Residual')
+#ax.set_title('Cl at 41 Percent Difference Residual')
+#fig.savefig('{}/ClPercDiffRes41_{}.png'.format(FigurePath, FigureSuffix))
+
+fig = plt.figure(figsize=(7,4),constrained_layout=True)
+ax = fig.gca()
+Cl_PercRes_41.hist(ax=ax, range=(-1,1), edgecolor='black',bins=[-1,-0.75,-0.5,-0.25,0,0.25,0.5,0.75,1])
+ax.set_title("Cl at 41 Percent Difference Residual Histogram")
+fig.savefig('{}/ClPercDiffRes41_Hist_{}.png'.format(FigurePath, FigureSuffix))
+
+####Subarea 12################################################################################################################################
+##SO4###########################################################################
 #fig, ax = plt.subplots(figsize=(5, 2.7), constrained_layout=True)
 #ax.scatter(ObservedDays_12, SO4_Modeled_12, color='blue', label='Model')
 #ax.scatter(Observeddates12, LoadOb12SO4, color='red', label='Gage')
@@ -1702,14 +1960,28 @@ ax.set_title('Cl at 41 Residual between Modeled and Observed')
 #ax.set_ylabel('Loading [kg/d]')
 #ax.set_title("SO4 12 Annual Loading")
 #ax.legend()
-fig, ax = plt.subplots(figsize=(7,4), constrained_layout=True)
-ax.scatter(SO4_Residual_12.index, SO4_Residual_12)
-ax.set_xlabel('Time')
-ax.set_ylabel('Residual')
-ax.set_title('SO4 at 12 Residual between Modeled and Observed')
-fig.savefig('C:/Users/Lizmot34/Desktop/FinishedFigures/SO4_12_Residual.png')
 
-##Ca
+#fig, ax = plt.subplots(figsize=(7,4), constrained_layout=True)
+#ax.scatter(SO4_Residual_12.index, SO4_Residual_12)
+#ax.set_xlabel('Time')
+#ax.set_ylabel('Residual')
+#ax.set_title('SO4 at 12 Residual')
+#fig.savefig('{}/SO4Res12_{}.png'.format(FigurePath, FigureSuffix))
+
+#fig, ax = plt.subplots(figsize=(7,4), constrained_layout=True)
+#ax.scatter(SO4_PercRes_12.index, SO4_PercRes_12)
+#ax.set_xlabel('Time')
+#ax.set_ylabel('Residual')
+#ax.set_title('SO4 at 12 Percent Difference Residual')
+#fig.savefig('{}/SO4PercDiffRes12_{}.png'.format(FigurePath, FigureSuffix))
+
+fig = plt.figure(figsize=(7,4),constrained_layout=True)
+ax = fig.gca()
+SO4_PercRes_12.hist(ax=ax, range=(-1,1), edgecolor='black',bins=[-1,-0.75,-0.5,-0.25,0,0.25,0.5,0.75,1])
+ax.set_title("SO4 at 12 Percent Difference Residual Histogram")
+fig.savefig('{}/SO4PercDiffRes12_Hist_{}.png'.format(FigurePath, FigureSuffix))
+
+##Ca############################################################################
 #fig, ax = plt.subplots(figsize=(5, 2.7), constrained_layout=True)
 #ax.scatter(ObservedDays_12, Ca_Modeled_12, color='blue', label='Model')
 #ax.scatter(Observeddates12, LoadOb12Ca, color='red', label='Gage')
@@ -1717,13 +1989,28 @@ fig.savefig('C:/Users/Lizmot34/Desktop/FinishedFigures/SO4_12_Residual.png')
 #ax.set_ylabel('Loading [kg/d]')
 #ax.set_title("Ca 12 Observed Loading")
 #ax.legend()
-fig, ax = plt.subplots(figsize=(7,4), constrained_layout=True)
-ax.scatter(Ca_Residual_12.index, Ca_Residual_12)
-ax.set_xlabel('Time')
-ax.set_ylabel('Residual')
-ax.set_title('Ca at 12 Residual between Modeled and Observed')
-fig.savefig('C:/Users/Lizmot34/Desktop/FinishedFigures/Ca_12_Residual.png')
-##Mg
+
+#fig, ax = plt.subplots(figsize=(7,4), constrained_layout=True)
+#ax.scatter(Ca_Residual_12.index, Ca_Residual_12)
+#ax.set_xlabel('Time')
+#ax.set_ylabel('Residual')
+#ax.set_title('Ca at 12 Residual')
+#fig.savefig('{}/CaRes12_{}.png'.format(FigurePath, FigureSuffix))
+
+#fig, ax = plt.subplots(figsize=(7,4), constrained_layout=True)
+#ax.scatter(Ca_PercRes_12.index, Ca_PercRes_12)
+#ax.set_xlabel('Time')
+#ax.set_ylabel('Residual')
+#ax.set_title('Ca at 12 Percent Difference Residual')
+#fig.savefig('{}/CaPercDiffRes12_{}.png'.format(FigurePath, FigureSuffix))
+
+fig = plt.figure(figsize=(7,4),constrained_layout=True)
+ax = fig.gca()
+Ca_PercRes_12.hist(ax=ax, range=(-1,1), edgecolor='black',bins=[-1,-0.75,-0.5,-0.25,0,0.25,0.5,0.75,1])
+ax.set_title("Ca at 12 Percent Difference Residual Histogram")
+fig.savefig('{}/CaPercDiffRes12_Hist_{}.png'.format(FigurePath, FigureSuffix))
+
+##Mg#############################################################################
 #fig, ax = plt.subplots(figsize=(5, 2.7), constrained_layout=True)
 #ax.scatter(ObservedDays_12, Mg_Modeled_12, color='blue', label='Model')
 #ax.scatter(Observeddates12, LoadOb12Mg, color='red', label='Gage')
@@ -1731,12 +2018,28 @@ fig.savefig('C:/Users/Lizmot34/Desktop/FinishedFigures/Ca_12_Residual.png')
 #ax.set_ylabel('Loading [kg/d]')
 #ax.set_title("Mg 12 Observed Loading")
 #ax.legend()
-fig, ax = plt.subplots(figsize=(7,4), constrained_layout=True)
-ax.scatter(Mg_Residual_12.index, Mg_Residual_12)
-ax.set_xlabel('Time')
-ax.set_ylabel('Residual')
-ax.set_title('Mg at 12 Residual between Modeled and Observed')
-##Na
+
+#fig, ax = plt.subplots(figsize=(7,4), constrained_layout=True)
+#ax.scatter(Mg_Residual_12.index, Mg_Residual_12)
+#ax.set_xlabel('Time')
+#ax.set_ylabel('Residual')
+#ax.set_title('Mg at 12 Residual')
+#fig.savefig('{}/MgRes12_{}.png'.format(FigurePath, FigureSuffix))
+
+#fig, ax = plt.subplots(figsize=(7,4), constrained_layout=True)
+#ax.scatter(Mg_PercRes_12.index, Mg_PercRes_12)
+#ax.set_xlabel('Time')
+#ax.set_ylabel('Residual')
+#ax.set_title('Mg at 12 Percent Difference Residual')
+#fig.savefig('{}/MgPercDiffRes12_{}.png'.format(FigurePath, FigureSuffix))
+
+fig = plt.figure(figsize=(7,4),constrained_layout=True)
+ax = fig.gca()
+Mg_PercRes_12.hist(ax=ax, range=(-1,1), edgecolor='black',bins=[-1,-0.75,-0.5,-0.25,0,0.25,0.5,0.75,1])
+ax.set_title("Mg at 12 Percent Difference Residual Histogram")
+fig.savefig('{}/MgPercDiffRes12_Hist_{}.png'.format(FigurePath, FigureSuffix))
+
+##Na############################################################################
 #fig, ax = plt.subplots(figsize=(5, 2.7), constrained_layout=True)
 #ax.scatter(ObservedDays_12, Na_Modeled_12, color='blue', label='Model')
 #ax.scatter(Observeddates12, LoadOb12Na, color='red', label='Gage')
@@ -1744,12 +2047,28 @@ ax.set_title('Mg at 12 Residual between Modeled and Observed')
 #ax.set_ylabel('Loading [kg/d]')
 #ax.set_title("Na 12 Observed Loading")
 #ax.legend()
-fig, ax = plt.subplots(figsize=(7,4), constrained_layout=True)
-ax.scatter(Na_Residual_12.index, Na_Residual_12)
-ax.set_xlabel('Time')
-ax.set_ylabel('Residual')
-ax.set_title('Na at 12 Residual between Modeled and Observed')
-##K
+
+#fig, ax = plt.subplots(figsize=(7,4), constrained_layout=True)
+#ax.scatter(Na_Residual_12.index, Na_Residual_12)
+#ax.set_xlabel('Time')
+#ax.set_ylabel('Residual')
+#ax.set_title('Na at 12 Residual')
+#fig.savefig('{}/NaRes12_{}.png'.format(FigurePath, FigureSuffix))
+
+#fig, ax = plt.subplots(figsize=(7,4), constrained_layout=True)
+#ax.scatter(Na_PercRes_12.index, Na_PercRes_12)
+#ax.set_xlabel('Time')
+#ax.set_ylabel('Residual')
+#ax.set_title('Na at 12 Percent Difference Residual')
+#fig.savefig('{}/NaPercDiffRes12_{}.png'.format(FigurePath, FigureSuffix))
+
+fig = plt.figure(figsize=(7,4),constrained_layout=True)
+ax = fig.gca()
+Na_PercRes_12.hist(ax=ax, range=(-1,1), edgecolor='black',bins=[-1,-0.75,-0.5,-0.25,0,0.25,0.5,0.75,1])
+ax.set_title("Na at 12 Percent Difference Residual Histogram")
+fig.savefig('{}/NaPercDiffRes12_Hist_{}.png'.format(FigurePath, FigureSuffix))
+
+##K#############################################################################
 #fig, ax = plt.subplots(figsize=(5, 2.7), constrained_layout=True)
 #ax.scatter(K_ObservedDays_12, K_Modeled_12, color='blue', label='Model')
 #ax.scatter(Observeddates12, LoadOb12K, color='red', label='Gage')
@@ -1757,38 +2076,85 @@ ax.set_title('Na at 12 Residual between Modeled and Observed')
 #ax.set_ylabel('Loading [kg/d]')
 #ax.set_title("K 12 Observed Loading")
 #ax.legend()
-fig, ax = plt.subplots(figsize=(7,4), constrained_layout=True)
-ax.scatter(K_Residual_12.index, K_Residual_12)
-ax.set_xlabel('Time')
-ax.set_ylabel('Residual')
-ax.set_title('K at 12 Residual between Modeled and Observed')
-##Cl
+
+#fig, ax = plt.subplots(figsize=(7,4), constrained_layout=True)
+#ax.scatter(K_Residual_12.index, K_Residual_12)
+#ax.set_xlabel('Time')
+#ax.set_ylabel('Residual')
+#ax.set_title('K at 12 Residual')
+#fig.savefig('{}/KRes12_{}.png'.format(FigurePath, FigureSuffix))
+
+#fig, ax = plt.subplots(figsize=(7,4), constrained_layout=True)
+#ax.scatter(K_PercRes_12.index, K_PercRes_12)
+#ax.set_xlabel('Time')
+#ax.set_ylabel('Residual')
+#ax.set_title('K at 12 Percent Difference Residual')
+#fig.savefig('{}/KPercDiffRes12_{}.png'.format(FigurePath, FigureSuffix))
+
+fig = plt.figure(figsize=(7,4),constrained_layout=True)
+ax = fig.gca()
+K_PercRes_12.hist(ax=ax, range=(-1,1), edgecolor='black',bins=[-1,-0.75,-0.5,-0.25,0,0.25,0.5,0.75,1])
+ax.set_title("K at 12 Percent Difference Residual Histogram")
+fig.savefig('{}/KPercDiffRes12_Hist_{}.png'.format(FigurePath, FigureSuffix))
+
+##Cl############################################################################
 #fig, ax = plt.subplots(figsize=(5, 2.7), constrained_layout=True)
 #ax.scatter(Cl_ObservedDays_12, Cl_Modeled_12, color='blue', label='Model')
 #ax.set_xlabel('Time')
 #ax.set_ylabel('Loading [kg/d]')
 #ax.set_title("Cl Observed Loading")
 #ax.legend()
-fig, ax = plt.subplots(figsize=(7,4), constrained_layout=True)
-ax.scatter(Cl_Residual_12.index, Cl_Residual_12)
-ax.set_xlabel('Time')
-ax.set_ylabel('Residual')
-ax.set_title('Cl at 12 Residual between Modeled and Observed')
-##HCO3
+
+#fig, ax = plt.subplots(figsize=(7,4), constrained_layout=True)
+#ax.scatter(Cl_Residual_12.index, Cl_Residual_12)
+#ax.set_xlabel('Time')
+#ax.set_ylabel('Residual')
+#ax.set_title('Cl at 12 Residual')
+#fig.savefig('{}/ClRes12_{}.png'.format(FigurePath, FigureSuffix))
+
+#fig, ax = plt.subplots(figsize=(7,4), constrained_layout=True)
+#ax.scatter(Cl_PercRes_12.index, Cl_PercRes_12)
+#ax.set_xlabel('Time')
+#ax.set_ylabel('Residual')
+#ax.set_title('Cl at 12 Percent Difference Residual')
+#fig.savefig('{}/ClPercDiffRes12_{}.png'.format(FigurePath, FigureSuffix))
+
+fig = plt.figure(figsize=(7,4),constrained_layout=True)
+ax = fig.gca()
+Cl_PercRes_12.hist(ax=ax, range=(-1,1), edgecolor='black',bins=[-1,-0.75,-0.5,-0.25,0,0.25,0.5,0.75,1])
+ax.set_title("Cl at 12 Percent Difference Residual Histogram")
+fig.savefig('{}/ClPercDiffRes12_Hist_{}.png'.format(FigurePath, FigureSuffix))
+
+##HCO3##########################################################################
 #fig, ax = plt.subplots(figsize=(5, 2.7), constrained_layout=True)
 #ax.scatter(HCO3_ObservedDays_12, HCO3_Modeled_12, color='blue', label='Model')
 #ax.set_xlabel('Time')
 #ax.set_ylabel('Loading [kg/d]')
 #ax.set_title("HCO3 12 Observed Loading")
 #ax.legend()
-fig, ax = plt.subplots(figsize=(7,4), constrained_layout=True)
-ax.scatter(HCO3_Residual_12.index, HCO3_Residual_12)
-ax.set_xlabel('Time')
-ax.set_ylabel('Residual')
-ax.set_title('HCO3 at 12 Residual between Modeled and Observed')
 
+#fig, ax = plt.subplots(figsize=(7,4), constrained_layout=True)
+#ax.scatter(HCO3_Residual_12.index, HCO3_Residual_12)
+#ax.set_xlabel('Time')
+#ax.set_ylabel('Residual')
+#ax.set_title('HCO3 at 12 Residual')
+#fig.savefig('{}/HCO3Res12_{}.png'.format(FigurePath, FigureSuffix))
+
+#fig, ax = plt.subplots(figsize=(7,4), constrained_layout=True)
+#ax.scatter(HCO3_PercRes_12.index, HCO3_PercRes_12)
+#ax.set_xlabel('Time')
+#ax.set_ylabel('Residual')
+#ax.set_title('HCO3 at 12 Percent Difference Residual')
+#fig.savefig('{}/HCO3PercDiffRes12_{}.png'.format(FigurePath, FigureSuffix))
+
+fig = plt.figure(figsize=(7,4),constrained_layout=True)
+ax = fig.gca()
+HCO3_PercRes_12.hist(ax=ax, range=(-1,1), edgecolor='black',bins=[-1,-0.75,-0.5,-0.25,0,0.25,0.5,0.75,1])
+ax.set_title("HCO3 at 12 Percent Difference Residual Histogram")
+fig.savefig('{}/HCO3PercDiffRes12_Hist_{}.png'.format(FigurePath, FigureSuffix))
+#
 ###Subarea 9#############################################################################################################
-##Ca
+##Ca#############################################################################
 #fig, ax = plt.subplots(figsize=(5, 2.7), constrained_layout=True)
 #ax.scatter(ObservedDays_9, Ca_Modeled_9, color='blue', label='Model')
 #ax.scatter(Observeddates9, LoadOb9Ca, color='red', label='Gage')
@@ -1796,13 +2162,28 @@ ax.set_title('HCO3 at 12 Residual between Modeled and Observed')
 #ax.set_ylabel('Loading [kg/d]')
 #ax.set_title("Ca 9 Observed Loading")
 #ax.legend()
-fig, ax = plt.subplots(figsize=(7,4), constrained_layout=True)
-ax.scatter(Ca_Residual_9.index, Ca_Residual_9)
-ax.set_xlabel('Time')
-ax.set_ylabel('Residual')
-ax.set_title('Ca at 9 Residual between Modeled and Observed')
-fig.savefig('C:/Users/Lizmot34/Desktop/FinishedFigures/Ca_9_Residual.png')
-##Mg
+
+#fig, ax = plt.subplots(figsize=(7,4), constrained_layout=True)
+#ax.scatter(Ca_Residual_9.index, Ca_Residual_9)
+#ax.set_xlabel('Time')
+#ax.set_ylabel('Residual')
+#ax.set_title('Ca at 9 Residual')
+#fig.savefig('{}/CaRes9_{}.png'.format(FigurePath, FigureSuffix))
+
+#fig, ax = plt.subplots(figsize=(7,4), constrained_layout=True)
+#ax.scatter(Ca_PercRes_9.index, Ca_PercRes_9)
+#ax.set_xlabel('Time')
+#ax.set_ylabel('Residual')
+#ax.set_title('Ca at 9 Percent Difference Residual')
+#fig.savefig('{}/CaPercDiffRes9_{}.png'.format(FigurePath, FigureSuffix))
+
+fig = plt.figure(figsize=(7,4),constrained_layout=True)
+ax = fig.gca()
+Ca_PercRes_9.hist(ax=ax, range=(-1,1), edgecolor='black',bins=[-1,-0.75,-0.5,-0.25,0,0.25,0.5,0.75,1])
+ax.set_title("Ca at 9 Percent Difference Residual Histogram")
+fig.savefig('{}/CaPercDiffRes9_Hist_{}.png'.format(FigurePath, FigureSuffix))
+
+##Mg#############################################################################
 #fig, ax = plt.subplots(figsize=(5, 2.7), constrained_layout=True)
 #ax.scatter(ObservedDays_9, Mg_Modeled_9, color='blue', label='Model')
 #ax.scatter(Observeddates9, LoadOb9Mg, color='red', label='Gage')
@@ -1810,12 +2191,28 @@ fig.savefig('C:/Users/Lizmot34/Desktop/FinishedFigures/Ca_9_Residual.png')
 #ax.set_ylabel('Loading [kg/d]')
 #ax.set_title("Mg 9 Observed Loading")
 #ax.legend()
-fig, ax = plt.subplots(figsize=(7,4), constrained_layout=True)
-ax.scatter(Mg_Residual_9.index, Mg_Residual_9)
-ax.set_xlabel('Time')
-ax.set_ylabel('Residual')
-ax.set_title('Mg at 9 Residual between Modeled and Observed')
-##Na
+
+#fig, ax = plt.subplots(figsize=(7,4), constrained_layout=True)
+#ax.scatter(Mg_Residual_9.index, Mg_Residual_9)
+#ax.set_xlabel('Time')
+#ax.set_ylabel('Residual')
+#ax.set_title('Mg at 9 Residual')
+#fig.savefig('{}/MgRes9_{}.png'.format(FigurePath, FigureSuffix))
+
+#fig, ax = plt.subplots(figsize=(7,4), constrained_layout=True)
+#ax.scatter(Mg_PercRes_9.index, Mg_PercRes_9)
+#ax.set_xlabel('Time')
+#ax.set_ylabel('Residual')
+#ax.set_title('Mg at 9 Percent Difference Residual')
+#fig.savefig('{}/MgPercDiffRes9_{}.png'.format(FigurePath, FigureSuffix))
+
+fig = plt.figure(figsize=(7,4),constrained_layout=True)
+ax = fig.gca()
+Mg_PercRes_9.hist(ax=ax, range=(-1,1), edgecolor='black',bins=[-1,-0.75,-0.5,-0.25,0,0.25,0.5,0.75,1])
+ax.set_title("Mg at 9 Percent Difference Residual Histogram")
+fig.savefig('{}/MgPercDiffRes9_Hist_{}.png'.format(FigurePath, FigureSuffix))
+
+##Na############################################################################
 #fig, ax = plt.subplots(figsize=(5, 2.7), constrained_layout=True)
 #ax.scatter(ObservedDays_9, Na_Modeled_9, color='blue', label='Model')
 #ax.scatter(Observeddates9, LoadOb9Na, color='red', label='Ggae')
@@ -1823,12 +2220,28 @@ ax.set_title('Mg at 9 Residual between Modeled and Observed')
 #ax.set_ylabel('Loading [kg/d]')
 #ax.set_title("Na Observed Loading")
 #ax.legend()
-fig, ax = plt.subplots(figsize=(7,4), constrained_layout=True)
-ax.scatter(Na_Residual_9.index, Na_Residual_9)
-ax.set_xlabel('Time')
-ax.set_ylabel('Residual')
-ax.set_title('Na at 9 Residual between Modeled and Observed')
-##SO4
+
+#fig, ax = plt.subplots(figsize=(7,4), constrained_layout=True)
+#ax.scatter(Na_Residual_9.index, Na_Residual_9)
+#ax.set_xlabel('Time')
+#ax.set_ylabel('Residual')
+#ax.set_title('Na at 9 Residual')
+#fig.savefig('{}/NaRes9_{}.png'.format(FigurePath, FigureSuffix))
+
+#fig, ax = plt.subplots(figsize=(7,4), constrained_layout=True)
+#ax.scatter(Na_PercRes_9.index, Na_PercRes_9)
+#ax.set_xlabel('Time')
+#ax.set_ylabel('Residual')
+#ax.set_title('Na at 9 Percent Difference Residual')
+#fig.savefig('{}/NaPercDiffRes9_{}.png'.format(FigurePath, FigureSuffix))
+
+fig = plt.figure(figsize=(7,4),constrained_layout=True)
+ax = fig.gca()
+Na_PercRes_9.hist(ax=ax, range=(-1,1), edgecolor='black',bins=[-1,-0.75,-0.5,-0.25,0,0.25,0.5,0.75,1])
+ax.set_title("Na at 9 Percent Difference Residual Histogram")
+fig.savefig('{}/NaPercDiffRes9_Hist_{}.png'.format(FigurePath, FigureSuffix))
+
+##SO4###########################################################################
 #fig, ax = plt.subplots(figsize=(5, 2.7), constrained_layout=True)
 #ax.scatter(SO4_ObservedDays_9, SO4_Modeled_9, color='blue', label='Model')
 #ax.scatter(Observeddates9, LoadOb9SO4, color='red', label='Gage')
@@ -1836,14 +2249,28 @@ ax.set_title('Na at 9 Residual between Modeled and Observed')
 #ax.set_ylabel('Loading [kg/d]')
 #ax.set_title("SO4 9 Observed Loading")
 #ax.legend()
-fig, ax = plt.subplots(figsize=(7,4), constrained_layout=True)
-ax.scatter(SO4_Residual_9.index, SO4_Residual_9)
-ax.set_xlabel('Time')
-ax.set_ylabel('Residual')
-ax.set_title('SO4 at 9 Residual between Modeled and Observed')
-fig.savefig('C:/Users/Lizmot34/Desktop/FinishedFigures/SO4_9_Residual.png')
 
-##K
+#fig, ax = plt.subplots(figsize=(7,4), constrained_layout=True)
+#ax.scatter(SO4_Residual_9.index, SO4_Residual_9)
+#ax.set_xlabel('Time')
+#ax.set_ylabel('Residual')
+#ax.set_title('SO4 at 9 Residual')
+#fig.savefig('{}/SO4Res9_{}.png'.format(FigurePath, FigureSuffix))
+
+#fig, ax = plt.subplots(figsize=(7,4), constrained_layout=True)
+#ax.scatter(SO4_PercRes_9.index, SO4_PercRes_9)
+#ax.set_xlabel('Time')
+#ax.set_ylabel('Residual')
+#ax.set_title('SO4 at 9 Percent Difference Residual')
+#fig.savefig('{}/SO4PercDiffRes9_{}.png'.format(FigurePath, FigureSuffix))
+
+fig = plt.figure(figsize=(7,4),constrained_layout=True)
+ax = fig.gca()
+SO4_PercRes_9.hist(ax=ax, range=(-1,1), edgecolor='black',bins=[-1,-0.75,-0.5,-0.25,0,0.25,0.5,0.75,1])
+ax.set_title("SO4 at 9 Percent Difference Residual Histogram")
+fig.savefig('{}/SO4PercDiffRes9_Hist_{}.png'.format(FigurePath, FigureSuffix))
+
+##K#############################################################################
 #fig, ax = plt.subplots(figsize=(5, 2.7), constrained_layout=True)
 #ax.scatter(K_ObservedDays_9, K_Modeled_9, color='blue', label='Model')
 #ax.scatter(Observeddates9, LoadOb9K, color='red', label='Gage')
@@ -1851,8 +2278,23 @@ fig.savefig('C:/Users/Lizmot34/Desktop/FinishedFigures/SO4_9_Residual.png')
 #ax.set_ylabel('Loading [kg/d]')
 #ax.set_title("K 9 Observed Loading")
 #ax.legend()
-fig, ax = plt.subplots(figsize=(7,4), constrained_layout=True)
-ax.scatter(K_Residual_9.index, K_Residual_9)
-ax.set_xlabel('Time')
-ax.set_ylabel('Residual')
-ax.set_title('K at 9 Residual between Modeled and Observed')
+
+#fig, ax = plt.subplots(figsize=(7,4), constrained_layout=True)
+#ax.scatter(K_Residual_9.index, K_Residual_9)
+#ax.set_xlabel('Time')
+#ax.set_ylabel('Residual')
+#ax.set_title('K at 9 Residual')
+#fig.savefig('{}/KRes9_{}.png'.format(FigurePath, FigureSuffix))
+
+#fig, ax = plt.subplots(figsize=(7,4), constrained_layout=True)
+#ax.scatter(K_PercRes_9.index, K_PercRes_9)
+#ax.set_xlabel('Time')
+#ax.set_ylabel('Residual')
+#ax.set_title('K at 9 Percent Difference Residual')
+#fig.savefig('{}/KPercDiffRes9_{}.png'.format(FigurePath, FigureSuffix))
+
+fig = plt.figure(figsize=(7,4),constrained_layout=True)
+ax = fig.gca()
+K_PercRes_9.hist(ax=ax, range=(-1,1), edgecolor='black',bins=[-1,-0.75,-0.5,-0.25,0,0.25,0.5,0.75,1])
+ax.set_title("K at 9 Percent Difference Residual Histogram")
+fig.savefig('{}/KPercDiffRes9_Hist_{}.png'.format(FigurePath, FigureSuffix))
